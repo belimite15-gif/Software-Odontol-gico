@@ -1,71 +1,54 @@
-# render.yaml — Blueprint de Render: crea la base de datos, la caché, la API (Go) y el sitio (React/PWA).
-# Se usa desde Render: New + → Blueprint → elegir este repositorio.
-databases:
-  - name: catalogo-upse-db
-    databaseName: multicatalogo
-    user: catalogo_user
-    plan: free
-    region: ohio
-
+# Blueprint para una demo académica en Render.
+# Las contraseñas y claves son generadas por Render, nunca se guardan en Git.
 services:
-  # Caché Redis (opcional: si no responde, la API sigue funcionando sin caché).
-  - type: keyvalue
-    name: catalogo-upse-cache
-    plan: free
-    region: ohio
-    maxmemoryPolicy: allkeys-lru
-    ipAllowList: [] # solo accesible desde dentro de Render
-
-  # API REST en Go/Fiber (se construye con backend/Dockerfile).
   - type: web
-    name: catalogo-upse-api
+    name: sigo-dental-api
     runtime: docker
     plan: free
-    region: ohio
-    dockerfilePath: ./backend/Dockerfile
+    region: virginia
     dockerContext: ./backend
+    dockerfilePath: ./backend/Dockerfile
     healthCheckPath: /api/health
     envVars:
+      - key: PORT
+        value: "10000"
       - key: DATABASE_URL
         fromDatabase:
-          name: catalogo-upse-db
-          property: connectionString
-      - key: REDIS_URL
-        fromService:
-          type: keyvalue
-          name: catalogo-upse-cache
+          name: sigo-dental-db
           property: connectionString
       - key: JWT_SECRET
-        generateValue: true # Render genera un secreto largo y aleatorio
-      - key: APP_ENV
-        value: prod
+        generateValue: true
+      - key: MFA_ENCRYPTION_KEY
+        generateValue: true
+      - key: CLINICAL_SIGNING_KEY
+        generateValue: true
+      - key: CLINICAL_NOTE_LOCK_HOURS
+        value: "24"
       - key: CORS_ORIGINS
-        sync: false # se pide al crear: la URL del sitio, ej. https://catalogo-upse-web.onrender.com
+        value: https://*.onrender.com
 
-  # Sitio estático: la SPA React (PWA) construida con Vite.
   - type: web
-    name: catalogo-upse-web
+    name: sigo-dental-web
     runtime: static
-    buildCommand: cd frontend && npm ci && npm run build
-    staticPublishPath: frontend/dist
+    rootDir: frontend
+    buildCommand: npm ci && npm run build
+    staticPublishPath: dist
     envVars:
-      - key: NODE_VERSION
-        value: 22.12.0
       - key: VITE_API_URL
-        sync: false # se pide al crear: la URL de la API, ej. https://catalogo-upse-api.onrender.com
+        fromService:
+          type: web
+          name: sigo-dental-api
+          envVarKey: RENDER_EXTERNAL_URL
     routes:
-      # React Router: cualquier ruta que no sea un archivo devuelve index.html (si no, recargar /catalogo da 404).
       - type: rewrite
         source: /*
         destination: /index.html
-    headers:
-      # El service worker nunca debe quedarse en caché del navegador/CDN, o las actualizaciones no llegan.
-      - path: /sw.js
-        name: Cache-Control
-        value: no-cache
-      - path: /manifest.webmanifest
-        name: Cache-Control
-        value: no-cache
-      - path: /assets/*
-        name: Cache-Control
-        value: public, max-age=31536000, immutable
+
+databases:
+  - name: sigo-dental-db
+    plan: free
+    region: virginia
+    postgresMajorVersion: "16"
+    databaseName: sigodental
+    user: sigo
+    ipAllowList: []
