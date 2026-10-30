@@ -36,8 +36,8 @@ Las cuentas locales usan `Demo123!`: `admin@sigo.local`, `recepcion@sigo.local`,
 | RF-06 | Consentimiento con captura manuscrita en mouse/pantalla táctil, control de tutor legal para menores e integridad HMAC. OTP y certificado legal requieren proveedor/certificado externo. |
 | RF-07 / RF-08 | Presupuestos por fases/sesiones, costos, descuentos y aprobación total/parcial; partidas aprobadas se pueden vincular a citas. |
 | RF-09 / RF-10 / RN-03 | Agenda por sillón/profesional, estados de citas y protección contra doble reserva del sillón. |
-| RF-11 | Simulador local de recordatorios por WhatsApp/SMS/correo en “Simuladores”. No envía mensajes ni integra proveedores. |
-| RF-12 | Registro básico de cobros y simulador de comprobante fiscal. No se conecta al SRI, no genera XML autorizado ni comprobante fiscal válido. |
+| RF-11 | No implementado: WhatsApp/SMS/correo requiere cuentas y proveedores externos. |
+| RF-12 | Registro básico de cobros; facturación electrónica fiscal y pagos reales no implementados. |
 | RF-13 / RF-14 | Reglas de honorarios estimados y descargo de inventario al completar procedimientos. No es liquidación contable/fiscal. |
 | RN-01 | Notas firmadas e inmutables, adendas vinculadas y consentimientos firmados protegidos contra cambios. HMAC técnico; certificado legal pendiente. |
 | RN-02 | Cierre de caja ciego: recepción registra el efectivo contado antes de ver el efectivo esperado y diferencia. |
@@ -49,7 +49,6 @@ Las cuentas locales usan `Demo123!`: `admin@sigo.local`, `recepcion@sigo.local`,
 - Conseguir VPS/servidor con IP pública, configurar firewall y dominio, HTTPS/TLS 1.3 y certificados. El repositorio incluye `docker-compose.prod.yml` y `.env.prod.example`, pero **no se ha desplegado** porque aún no hay servidor/IP pública.
 - Cifrado de datos en reposo, copias de seguridad cifradas y prueba de restauración.
 - Integraciones reales de mensajería, facturación fiscal, OTP y firma digital legal, y pasarela de pagos.
-- El menú “Simuladores” permite demostrar los flujos de recordatorio y emisión fiscal con datos ficticios, guardados localmente en el navegador. Los resultados están marcados como simulación y no se deben usar como mensajes enviados ni documentos tributarios.
 - Pruebas de rendimiento/disponibilidad/concurrencia, cobertura unitaria e integración del 80% en endpoints críticos, escaneos SAST/DAST y completar/revisar el contrato OpenAPI.
 - UAT, auditoría de seguridad y validación clínica/legal antes de cualquier uso real.
 

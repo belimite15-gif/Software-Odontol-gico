@@ -23,7 +23,6 @@ const initialInvoice = [{ id: 'FAC-00031', patient: 'María Fernanda López', co
 
 export default function App() {
   const [section, setSection] = useState('Inicio');
-  const [mobileNavOpen, setMobileNavOpen] = useState(false);
   const [patients, setPatients] = useState(() => getSaved('sigo-patients', seedPatients));
   const [visits, setVisits] = useState(() => getSaved('sigo-visits', seedVisits));
   const [invoices, setInvoices] = useState(() => getSaved('sigo-invoices', initialInvoice));
@@ -176,16 +175,16 @@ export default function App() {
   const patientInitials = (name) => name.split(' ').slice(0, 2).map(x => x[0]).join('');
 
   const access = {
-    admin_ti: ['Inicio','Pacientes','Agenda','Expediente','Planes de tratamiento','Caja y facturación','Inventario','Reportes','Simuladores'],
-    recepcionista: ['Inicio','Pacientes','Agenda','Planes de tratamiento','Caja y facturación','Inventario','Simuladores'],
-    odontologo: ['Inicio','Pacientes','Agenda','Expediente','Planes de tratamiento','Simuladores'],
-    asistente: ['Inicio','Pacientes','Agenda','Expediente','Planes de tratamiento','Inventario','Simuladores'],
-    auditor: ['Inicio','Planes de tratamiento','Caja y facturación','Inventario','Reportes','Simuladores'],
+    admin_ti: ['Inicio','Pacientes','Agenda','Expediente','Planes de tratamiento','Caja y facturación','Inventario','Reportes'],
+    recepcionista: ['Inicio','Pacientes','Agenda','Planes de tratamiento','Caja y facturación','Inventario'],
+    odontologo: ['Inicio','Pacientes','Agenda','Expediente','Planes de tratamiento'],
+    asistente: ['Inicio','Pacientes','Agenda','Expediente','Planes de tratamiento','Inventario'],
+    auditor: ['Inicio','Planes de tratamiento','Caja y facturación','Inventario','Reportes'],
   };
   const allowed = new Set(access[session?.user?.role] || []);
   const nav = [
     { title: 'CLÍNICA', items: [['Inicio', LayoutDashboard], ['Pacientes', Users], ['Agenda', CalendarDays], ['Expediente', FileHeart]].filter(([label]) => allowed.has(label)) },
-    { title: 'ADMINISTRACIÓN', items: [['Planes de tratamiento', ClipboardList], ['Caja y facturación', CircleDollarSign], ['Inventario', ClipboardList], ['Reportes', Activity], ['Simuladores', Activity]].filter(([label]) => allowed.has(label)) },
+    { title: 'ADMINISTRACIÓN', items: [['Planes de tratamiento', ClipboardList], ['Caja y facturación', CircleDollarSign], ['Inventario', ClipboardList], ['Reportes', Activity]].filter(([label]) => allowed.has(label)) },
   ].filter(group => group.items.length > 0);
   const roleLabel = { admin_ti: 'Administración TI', recepcionista: 'Recepcionista', odontologo: 'Odontólogo', asistente: 'Asistente dental', auditor: 'Auditor' }[session?.user?.role] || 'Usuario';
   const initials = session?.user?.name?.split(' ').slice(0,2).map(part => part[0]).join('') || 'SD';
@@ -195,15 +194,14 @@ export default function App() {
   if (!session.user?.mfaEnabled) return <MFASetupPage user={session.user} onComplete={() => { const upgraded={...session,user:{...session.user,mfaEnabled:true}}; persist('sigo-session',upgraded,setSession); setSessionNotice(''); }}/>
 
   return <div className="app-shell">
-    {mobileNavOpen && <button className="sidebar-backdrop" aria-label="Cerrar menú" onClick={() => setMobileNavOpen(false)}/>}
-    <aside className={`sidebar ${mobileNavOpen ? 'sidebar-open' : ''}`}>
+    <aside className="sidebar">
       <div className="brand"><div className="brand-mark"><Stethoscope size={21}/></div><div><b>SIGO<span>·</span>Dental</b><small>GESTIÓN CLÍNICA</small></div></div>
       <div className="clinic-switch"><div className="clinic-icon">CD</div><div><b>Clínica Dental Sonrisa</b><small>Sucursal principal</small></div><ChevronDown size={15}/></div>
-      <nav>{nav.map(group => <div className="nav-group" key={group.title}><div className="nav-label">{group.title}</div>{group.items.map(([label, Icon]) => <button key={label} onClick={() => { setSection(label); if (label !== 'Expediente') setSelected(null); setMobileNavOpen(false); }} className={`nav-item ${section === label ? 'active' : ''}`}><Icon size={18}/><span>{label}</span>{label === 'Pacientes' && <span className="nav-count">{patients.length}</span>}</button>)}</div>)}</nav>
+      <nav>{nav.map(group => <div className="nav-group" key={group.title}><div className="nav-label">{group.title}</div>{group.items.map(([label, Icon]) => <button key={label} onClick={() => { setSection(label); if (label !== 'Expediente') setSelected(null); }} className={`nav-item ${section === label ? 'active' : ''}`}><Icon size={18}/><span>{label}</span>{label === 'Pacientes' && <span className="nav-count">{patients.length}</span>}</button>)}</div>)}</nav>
       <div className="sidebar-bottom"><div className="help-card"><div className="help-icon"><ShieldCheck size={17}/></div><b>Atención segura</b><p>Registra cada atención para mantener el expediente completo.</p><button onClick={() => notify('Guía de uso próximamente')}>Ver guía <span>→</span></button></div><div className="user-profile"><div className="avatar avatar-teal">{initials}</div><div><b>{session.user.name}</b><small>{roleLabel}</small></div><button className="logout-button" onClick={handleLogout}>Salir</button></div></div>
     </aside>
     <main className="main-area">
-      <header className="topbar"><button className="mobile-menu" aria-label={mobileNavOpen ? 'Cerrar menú' : 'Abrir menú'} aria-expanded={mobileNavOpen} onClick={() => setMobileNavOpen(open => !open)}><Menu size={20}/></button><div className="breadcrumbs">Clínica <span>/</span> <b>{pageTitle}</b>{selected && section === 'Expediente' && <><span>/</span><b>{selected.name}</b></>}</div><div className="top-actions"><div className="today-label"><CalendarDays size={16}/>{new Intl.DateTimeFormat('es-EC', { weekday: 'long', day: 'numeric', month: 'long' }).format(new Date())}</div><button className="icon-button" title="Notificaciones" onClick={() => notify('No tienes notificaciones nuevas')}><span className="notification-dot"/>◉</button><div className="avatar avatar-small">{initials}</div></div></header>
+      <header className="topbar"><button className="mobile-menu" onClick={() => notify('Abre el menú desde una pantalla amplia')}><Menu size={20}/></button><div className="breadcrumbs">Clínica <span>/</span> <b>{pageTitle}</b>{selected && section === 'Expediente' && <><span>/</span><b>{selected.name}</b></>}</div><div className="top-actions"><div className="today-label"><CalendarDays size={16}/>{new Intl.DateTimeFormat('es-EC', { weekday: 'long', day: 'numeric', month: 'long' }).format(new Date())}</div><button className="icon-button" title="Notificaciones" onClick={() => notify('No tienes notificaciones nuevas')}><span className="notification-dot"/>◉</button><div className="avatar avatar-small">{initials}</div></div></header>
       <div className="content">
         {section === 'Inicio' && <Dashboard patients={patients} visits={visits} invoices={invoices} openSection={setSection} openPatient={openPatient} money={money} hideRevenue={session.user.role === 'recepcionista'}/>}
         {section === 'Pacientes' && <Patients patients={matchingPatients} query={query} setQuery={setQuery} onNew={() => setModal('patient')} onOpen={openPatient} onEdit={p => { setSelected(p); setModal('editPatient'); }} initials={patientInitials}/>}
@@ -213,7 +211,6 @@ export default function App() {
         {section === 'Caja y facturación' && <Billing backendReady={backendReady} canCloseCash={['admin_ti','recepcionista'].includes(session.user.role)} hideTillSummary={session.user.role==='recepcionista'} invoices={invoices} money={money} onNew={() => setModal('invoice')} notify={notify}/>}
         {section === 'Inventario' && <Inventory backendReady={backendReady} canWrite={['admin_ti','recepcionista','asistente'].includes(session.user.role)} canManage={['admin_ti','recepcionista'].includes(session.user.role)} notify={notify}/>}
         {section === 'Reportes' && <Reports backendReady={backendReady} canManage={session.user.role==='admin_ti'} notify={notify}/>}
-        {section === 'Simuladores' && <IntegrationSimulators visits={visits} invoices={invoices} notify={notify}/>}
       </div>
     </main>
     {modal && <Modal backendReady={backendReady} kind={modal} patients={patients} visits={visits} patient={selected || patients[0]} onCreatePatient={savePatient} onUpdatePatient={editPatient} onCreateVisit={saveVisit} onCreateInvoice={saveInvoice} onSaveRx={async form => { const p = patients.find(x => x.name === form.patient) || selected || patients[0]; const saved = backendReady ? await api.createPrescription(p.id, form) : { ...form, id: Date.now(), patient: p?.id, date: new Date().toLocaleDateString('es-EC') }; persist('sigo-rx', [saved, ...prescriptions.filter(x => x.id !== saved.id)], setPrescriptions); }} onSaveConsent={async form => { const p = patients.find(x => x.name === form.patient) || selected || patients[0]; const saved = backendReady ? await api.createConsent(p.id, form) : { ...form, id: Date.now(), patient: p?.id, date: new Date().toLocaleDateString('es-EC'), state: 'Pendiente de firma' }; persist('sigo-consents', [saved, ...consents.filter(x => x.id !== saved.id)], setConsents); }} setModal={setModal} notify={notify}/>}
@@ -449,7 +446,7 @@ function Billing({ backendReady, canCloseCash, hideTillSummary, invoices, money,
   const close=async e=>{e.preventDefault();setClosing(true);try{const result=await api.closeCash(Number(counted));setClosure(result);setCounted('');notify('Cierre de caja registrado')}catch(error){notify(`No se pudo cerrar caja: ${error.message}`)}finally{setClosing(false)}};
   return <><PageHeading eyebrow="ADMINISTRACIÓN FINANCIERA" title="Caja y facturación" subtitle="Registra cobros y consulta el estado de cuenta de los pacientes." action={<button className="btn btn-primary" onClick={onNew}><Plus size={17}/> Registrar cobro</button>}/><div className="stat-grid billing-stats">{!hideTillSummary&&<Stat icon={CircleDollarSign} label="Ingresos hoy" value={money(paidToday)} detail="Caja principal" tone="teal"/>}<Stat icon={ClipboardList} label="Cobros registrados" value={invoices.length.toString()} detail="En el periodo" tone="blue"/><Stat icon={Activity} label="Saldo por cobrar" value={money(due)} detail="Tratamientos con abono" tone="peach"/></div>
     {canCloseCash&&<div className="panel cash-close-panel"><div className="panel-heading"><div><h2>Cierre ciego de caja</h2><p>Cuenta primero el efectivo físico. El total teórico aparecerá después de registrar tu conteo.</p></div></div><form onSubmit={close} className="cash-close-form"><label className="field"><span>Efectivo contado (USD)</span><input type="number" min="0" step="0.01" required value={counted} onChange={e=>setCounted(e.target.value)} placeholder="Ingresa el conteo físico"/></label><button className="btn btn-primary" disabled={!backendReady||closing}>{closing?'Registrando…':'Cerrar caja'}</button></form>{closure&&<div className="cash-result"><b>Cierre registrado</b><span>Efectivo contado: {money(closure.declaredCash)}</span><span>Efectivo esperado: {money(closure.expectedCash)}</span><span>Diferencia: {money(closure.difference)}</span><small>Total cobrado en el periodo: {money(closure.totalCollected)} · {closure.paymentCount} pagos</small></div>}</div>}
-    <div className="panel table-panel billing-receipts-panel"><div className="panel-heading"><div><h2>Comprobantes recientes</h2><p>Control de pagos y saldos pendientes</p></div><button className="btn btn-outline">Este mes <ChevronDown size={15}/></button></div><div className="table-scroll"><table><thead><tr><th>N.º COMPROBANTE</th><th>PACIENTE</th><th>CONCEPTO</th><th>FECHA</th><th>TOTAL</th><th>SALDO</th><th>ESTADO</th></tr></thead><tbody>{invoices.map(i => <tr key={i.id}><td><b>{i.id}</b></td><td>{i.patient}</td><td>{i.concept}</td><td>{i.date}</td><td>{money(i.total)}</td><td>{money(i.total - i.paid)}</td><td><Status label={i.state}/></td></tr>)}</tbody></table></div></div></>;
+    <div className="panel table-panel"><div className="panel-heading"><div><h2>Comprobantes recientes</h2><p>Control de pagos y saldos pendientes</p></div><button className="btn btn-outline">Este mes <ChevronDown size={15}/></button></div><div className="table-scroll"><table><thead><tr><th>N.º COMPROBANTE</th><th>PACIENTE</th><th>CONCEPTO</th><th>FECHA</th><th>TOTAL</th><th>SALDO</th><th>ESTADO</th></tr></thead><tbody>{invoices.map(i => <tr key={i.id}><td><b>{i.id}</b></td><td>{i.patient}</td><td>{i.concept}</td><td>{i.date}</td><td>{money(i.total)}</td><td>{money(i.total - i.paid)}</td><td><Status label={i.state}/></td></tr>)}</tbody></table></div></div></>;
 }
 function Inventory({ backendReady, canWrite, canManage, notify }) {
   const [products, setProducts] = useState([]);
@@ -498,60 +495,6 @@ function Inventory({ backendReady, canWrite, canManage, notify }) {
     <div className="panel table-panel inventory-table"><div className="panel-heading"><div><h2>Movimientos recientes</h2><p>Últimas entradas y consumos registrados.</p></div></div><div className="table-scroll"><table><thead><tr><th>FECHA</th><th>INSUMO</th><th>MOVIMIENTO</th><th>CANTIDAD</th><th>REFERENCIA</th><th>REGISTRADO POR</th></tr></thead><tbody>{movements.map(m=><tr key={m.id}><td>{m.date}</td><td>{m.product}</td><td>{m.type==='receipt'?'Entrada':m.type==='consumption'?'Consumo':'Ajuste inicial'}</td><td>{m.type==='consumption'?'−':'+'}{m.quantity}</td><td>{m.reference||'—'}</td><td>{m.author}</td></tr>)}</tbody></table>{!movements.length && <Empty title="Sin movimientos" text="Las entradas y consumos se mostrarán en este historial."/>}</div></div>
     {canManage && <div className="panel inventory-form"><div className="panel-heading"><div><h2>Descargo automático por procedimiento</h2><p>Al marcar una cita como Atendido, se descontarán estos insumos automáticamente. Usa exactamente el mismo nombre de Agenda.</p></div></div><form onSubmit={saveRule} className="form-grid"><Field label="Nombre exacto del procedimiento" name="procedure" required value={rule.procedure} placeholder="Ej. Control y profilaxis" onChange={e=>setRule({...rule,procedure:e.target.value})}/><label className="field"><span>Insumo</span><select required value={rule.productId} onChange={e=>setRule({...rule,productId:e.target.value})}><option value="">Selecciona un insumo</option>{products.map(p=><option value={p.id} key={p.id}>{p.name} ({p.unit})</option>)}</select></label><Field label="Cantidad por procedimiento" name="quantity" type="number" step="0.01" required value={rule.quantity} onChange={e=>setRule({...rule,quantity:e.target.value})}/><button className="btn btn-primary" disabled={busy || !products.length}>Guardar regla</button></form>{rules.length>0 && <div className="rule-list">{rules.map(r=><div className="rule-row" key={r.id}><span><b>{r.procedure}</b><small>{r.product} · {r.quantity} {r.unit}</small></span><button className="btn btn-outline" onClick={()=>removeRule(r.id)}>Desactivar</button></div>)}</div>}</div>}
     {!backendReady && <p className="hint">Conecta la API para cargar y guardar el inventario en PostgreSQL.</p>}
-  </>;
-}
-
-function IntegrationSimulators({ visits, invoices, notify }) {
-  const [appointmentId, setAppointmentId] = useState('');
-  const [channel, setChannel] = useState('WhatsApp');
-  const [reminder, setReminder] = useState('24 horas antes');
-  const [invoiceId, setInvoiceId] = useState('');
-  const [events, setEvents] = useState(() => getSaved('sigo-integration-demo-events', []));
-  const [fiscalResults, setFiscalResults] = useState(() => getSaved('sigo-fiscal-demo-results', {}));
-  const selectedVisit = visits.find(v => String(v.id) === appointmentId) || visits[0];
-  const selectedInvoice = invoices.find(i => String(i.id) === invoiceId) || invoices[0];
-  const addEvent = event => {
-    const next = [{ ...event, id: `${Date.now()}-${Math.random().toString(16).slice(2, 8)}`, at: new Date().toLocaleString('es-EC') }, ...events].slice(0, 20);
-    setEvents(next);
-    localStorage.setItem('sigo-integration-demo-events', JSON.stringify(next));
-  };
-  const simulateReminder = event => {
-    event.preventDefault();
-    if (!selectedVisit) return;
-    addEvent({ type: 'recordatorio', status: 'SIMULADO · NO ENVIADO', channel, subject: selectedVisit.patient, detail: `${reminder} · ${selectedVisit.procedure} · ${selectedVisit.date} ${selectedVisit.time}` });
-    notify(`Recordatorio simulado por ${channel}; no se envió ningún mensaje`);
-  };
-  const simulateInvoice = () => {
-    if (!selectedInvoice) return;
-    const accessKey = `DEMO-${new Date().toISOString().replace(/\D/g, '').slice(0, 14)}-${String(selectedInvoice.id).replace(/\W/g, '').slice(-8)}`;
-    const result = { accessKey, status: 'SIMULACIÓN · NO ENVIADA AL SRI', invoice: String(selectedInvoice.id), at: new Date().toLocaleString('es-EC') };
-    const next = { ...fiscalResults, [selectedInvoice.id]: result };
-    setFiscalResults(next);
-    localStorage.setItem('sigo-fiscal-demo-results', JSON.stringify(next));
-    addEvent({ type: 'comprobante fiscal', status: result.status, channel: 'SRI (simulador)', subject: selectedInvoice.patient, detail: `${selectedInvoice.id} · ${money(selectedInvoice.total)} · clave de acceso ficticia ${accessKey}` });
-    notify('Simulación generada; no es una factura electrónica válida');
-  };
-  return <>
-    <PageHeading eyebrow="DEMOSTRACIÓN · SIN SERVICIOS EXTERNOS" title="Simuladores de integraciones" subtitle="Permite presentar los flujos de recordatorios y comprobantes fiscales sin enviar mensajes ni conectarse al SRI."/>
-    <div className="panel report-panel">
-      <div className="panel-heading"><div><h2>Recordatorios de citas</h2><p>Prepara una vista de WhatsApp, SMS o correo y registra el resultado como simulación.</p></div></div>
-      <form className="form-grid" onSubmit={simulateReminder}>
-        <label className="field span-two"><span>Cita</span><select required value={appointmentId || (visits[0] ? String(visits[0].id) : '')} onChange={e => setAppointmentId(e.target.value)}>{visits.map(v => <option key={v.id} value={v.id}>{v.patient} · {v.procedure} · {v.date} {v.time}</option>)}</select></label>
-        <label className="field"><span>Canal de demostración</span><select value={channel} onChange={e => setChannel(e.target.value)}><option>WhatsApp</option><option>SMS</option><option>Correo electrónico</option></select></label>
-        <label className="field"><span>Anticipación</span><select value={reminder} onChange={e => setReminder(e.target.value)}><option>48 horas antes</option><option>24 horas antes</option><option>Confirmación de cita</option></select></label>
-        <button className="btn btn-primary span-two" disabled={!visits.length}>Simular recordatorio</button>
-      </form>
-      {selectedVisit && <div className="form-warning"><Activity size={16}/> Vista previa: Hola {selectedVisit.patient}, te recordamos tu cita de {selectedVisit.procedure} el {selectedVisit.date} a las {selectedVisit.time}. Este mensaje no será enviado.</div>}
-      {!visits.length && <Empty title="No hay citas disponibles" text="Registra una cita en Agenda para poder simular su recordatorio."/>}
-    </div>
-    <div className="panel report-panel">
-      <div className="panel-heading"><div><h2>Comprobante fiscal de demostración</h2><p>Genera un resultado ficticio para explicar el flujo de autorización.</p></div></div>
-      <div className="form-grid"><label className="field span-two"><span>Cobro</span><select required value={invoiceId || (invoices[0] ? String(invoices[0].id) : '')} onChange={e => setInvoiceId(e.target.value)}>{invoices.map(i => <option key={i.id} value={i.id}>{i.id} · {i.patient} · {money(i.total)}</option>)}</select></label><button className="btn btn-primary span-two" onClick={simulateInvoice} disabled={!invoices.length}>Simular emisión electrónica</button></div>
-      {selectedInvoice && fiscalResults[selectedInvoice.id] && <div className="demo-result"><b>{fiscalResults[selectedInvoice.id].status}</b><span>Comprobante: {selectedInvoice.id}</span><span>Clave ficticia: {fiscalResults[selectedInvoice.id].accessKey}</span><small>Generado: {fiscalResults[selectedInvoice.id].at}</small></div>}
-      {!invoices.length && <Empty title="No hay cobros disponibles" text="Registra un cobro en Caja y facturación para simular el comprobante."/>}
-      <p className="hint">No se conecta al SRI y no genera XML autorizado, firma electrónica, clave tributaria ni comprobante válido para declarar impuestos.</p>
-    </div>
-    <div className="panel table-panel report-panel"><div className="panel-heading"><div><h2>Historial de demostración</h2><p>Los registros se guardan en este navegador y están marcados como simulados.</p></div><button className="btn btn-outline" type="button" onClick={() => { setEvents([]); localStorage.removeItem('sigo-integration-demo-events'); }}>Limpiar historial</button></div>{events.length ? <div className="demo-event-list">{events.map(event => <div className="demo-event" key={event.id}><b>{event.type} · {event.status}</b><span>{event.subject} · {event.detail}</span><small>{event.channel} · {event.at}</small></div>)}</div> : <Empty title="Sin simulaciones" text="Aquí aparecerán los recordatorios y comprobantes que generes."/>}</div>
   </>;
 }
 
