@@ -1,0 +1,14 @@
+.env
+.git
+git
+database
+*.md
+docker-compose.yml
+auth/
+config/
+controllers/
+domain/
+middleware/
+models/
+repository/
+routes/
